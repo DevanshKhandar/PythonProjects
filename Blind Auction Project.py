@@ -1,5 +1,5 @@
-import art
-print(art.logo)
+import Blind_auction_project_art
+print(Blind_auction_project_art.logo)
 
 def highest_bidder(bidding_dictionary):
     highest = 0
