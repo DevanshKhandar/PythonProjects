@@ -1,52 +1,45 @@
 import requests
-STOCK_NAME = "TSLA"
-COMPANY_NAME = "Tesla Inc"
+from datetime import datetime
 
-STOCK_ENDPOINT = "https://www.alphavantage.co/query"
-NEWS_ENDPOINT = "https://newsapi.org/v2/everything"
+pixela_endpoint = "https://pixe.la/v1/users"
 
-STOCK_API_KEY = "LQ0T5F4MIY1G4H0E"
-NEWS_API_KEY = "47ca85232533451382e904a614569b38"
-
-    ## STEP 1: Use https://www.alphavantage.co/documentation/#daily
-# When stock price increase/decreases by 5% between yesterday and the day before yesterday then print("Get News").
-
-#TODO 1. - Get yesterday's closing stock price. Hint: You can perform list comprehensions on Python dictionaries. e.g. [new_value for (key, value) in dictionary.items()]
-stock_params = {
-    "function": "TIME_SERIES_DAILY",
-    "symbol": STOCK_NAME,
-    "apikey": STOCK_API_KEY,
+user_params = {
+    "token": "ojwbb620ijhb04w56",
+    "username": "devansh18",
+    "agreeTermsOfService": "yes",
+    "notMinor": "yes",
 }
 
-response = requests.get(STOCK_ENDPOINT, params= stock_params)
-data = response.json()["Time Series (Daily)"]
-data_list = [value for (key, value) in data.items()]
-yesterday_data = data_list[0]
-yesterday_closing_price = yesterday_data["4. close"]
-print(yesterday_closing_price)
+# response = requests.post(url=pixela_endpoint, json= user_params)
+#
+# print(response.text)
 
-#TODO 2. - Get the day before yesterday's closing stock price
-day_before_yesterday_data = data_list[1]
-day_before_yesterday_closing_price = day_before_yesterday_data["4. close"]
-print(day_before_yesterday_closing_price)
+graph = f"{pixela_endpoint}/devansh18/graphs"
 
-#TODO 3. - Find the positive difference between 1 and 2. e.g. 40 - 20 = -20, but the positive difference is 20. Hint: https://www.w3schools.com/python/ref_func_abs.asp
-difference = abs(float(yesterday_closing_price) - float(day_before_yesterday_closing_price))
-print(difference)
+graph_config = {
+    "id": "cycle",
+    "name": "cycling graph",
+    "unit": "Km",
+    "type": "float",
+    "color": "ajisai",
+}
 
-#TODO 4. - Work out the percentage difference in price between closing price yesterday and closing price the day before yesterday.
-percent = (difference/float(yesterday_closing_price)) * 100
-print(percent)
+headers = {
+    "X-USER-TOKEN": "ojwbb620ijhb04w56",
+}
 
-#TODO 5. - If TODO4 percentage is greater than 5 then print("Get News").
-if percent > 0:
-    news_params = {
-        "apiKey": NEWS_API_KEY,
-        "qInTitle": COMPANY_NAME,
-    }
+# response = requests.post(url=graph, json=graph_config, headers= headers)
+# print(response.text)
 
-    news = requests.get(NEWS_ENDPOINT, params=news_params)
-    articles = news.json()["articles"]
+pixel = f"{pixela_endpoint}/devansh18/garphs/cycle"
 
-    three_articles = articles[:3]
-    print(three_articles)
+today = datetime.now()
+
+pixel_date = {
+    "date": today.strftime("%Y%m%d"),
+    "quantity": "18.2",
+}
+
+response = requests.post(url=pixel, json=pixel_date, headers=headers)
+
+print(response.text)
