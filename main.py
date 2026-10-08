@@ -1,45 +1,65 @@
-import requests
-from datetime import datetime
+import requests_cache
 
-pixela_endpoint = "https://pixe.la/v1/users"
+requests_cache.install_cache(
+    "flight_cache",
+    backend="sqlite",
+    expire_after=3600
+)
 
-user_params = {
-    "token": "ojwbb620ijhb04w56",
-    "username": "devansh18",
-    "agreeTermsOfService": "yes",
-    "notMinor": "yes",
-}
+from datetime import datetime, timedelta
+from pprint import pprint
 
-# response = requests.post(url=pixela_endpoint, json= user_params)
-#
-# print(response.text)
+from data_manager import DataManager
+from flight_search import FlightSearch
+from flight_data import find_cheapest_flight
 
-graph = f"{pixela_endpoint}/devansh18/graphs"
 
-graph_config = {
-    "id": "cycle",
-    "name": "cycling graph",
-    "unit": "Km",
-    "type": "float",
-    "color": "ajisai",
-}
+# ==================== Set the Dates ====================
 
-headers = {
-    "X-USER-TOKEN": "ojwbb620ijhb04w56",
-}
+tomorrow = datetime.now() + timedelta(days=1)
+six_month_from_today = datetime.now() + timedelta(days=6 * 30)
 
-# response = requests.post(url=graph, json=graph_config, headers= headers)
-# print(response.text)
+tomorrow = tomorrow.strftime("%Y-%m-%d")
+six_month_from_today = six_month_from_today.strftime("%Y-%m-%d")
 
-pixel = f"{pixela_endpoint}/devansh18/garphs/cycle"
 
-today = datetime.now()
+# ==================== Get Sheet Data ====================
 
-pixel_date = {
-    "date": today.strftime("%Y%m%d"),
-    "quantity": "18.2",
-}
+data_manager = DataManager()
+sheet_data = data_manager.get_destination_data()
 
-response = requests.post(url=pixel, json=pixel_date, headers=headers)
 
-print(response.text)
+# ==================== Flight Search ====================
+
+flight_search = FlightSearch()
+
+for destination in sheet_data:
+
+    flights = flight_search.check_flights(
+        origin_city_code="LHR",
+        destination_city_code=destination["iataCode"],
+        from_time=tomorrow,
+        to_time=six_month_from_today
+    )
+
+    cheapest_flight = find_cheapest_flight(
+        flights,
+        return_date=six_month_from_today
+    )
+
+    if cheapest_flight.price != "N/A":
+
+        print(
+            f"{destination['city']}: GBP {cheapest_flight.price}"
+        )
+
+        if cheapest_flight.price < destination["lowestPrice"]:
+
+            print(
+                f"Lower price flight found to {destination['city']}!"
+            )
+
+            data_manager.update_lowest_price(
+                row_id=destination["id"],
+                new_price=cheapest_flight.price
+            )
